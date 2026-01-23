@@ -5,7 +5,7 @@
 // Immediately set enviornment to test
 process.env.NODE_ENV = 'test';
 const assert = require('assert');
-require('../app.js');
+require('../app');
 const models = require('../models');
 const common = require('./common');
 
