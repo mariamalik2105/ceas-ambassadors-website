@@ -8,7 +8,8 @@
     "lint": "./node_modules/.bin/eslint ."
   },
   "engines": {
-    "node": "^14.3.0"
+    "node": "^14.3.0",
+    "npm": "8.x"
   },
   "eslintConfig": {
     "extends": "airbnb-base",
