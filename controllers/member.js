@@ -66,6 +66,11 @@ const postLogin = (req, res, next) => {
       }
       // success logging in!
       req.session.status = 200;
+      req.session.alert = {
+        errorMessages: [],
+        infoMessages: [],
+        successMessages: [],
+      };
       // Check to see if there are any messages for the user
       // could be turned into it's own function if this logic gets too complex 1.314e+10
       const uDate = new Date().getTime();
@@ -89,18 +94,30 @@ exports.postLogin = postLogin;
 /**
  * GET for logout
  */
-const getLogout = (req, res) => {
+const getLogout = (req, res, next) => {
   if (req.user) {
-    req.logout();
-    req.session.status = 200;
-    req.session.alert.successMessages.push('You have been logged out.');
+    req.logout((err) => {
+      if (err) {
+        return next(err);
+      }
+      req.session.status = 200;
+      req.session.alert = {
+        errorMessages: [],
+        infoMessages: [],
+        successMessages: [],
+      };
+      req.session.alert.successMessages.push('You have been logged out.');
+      return req.session.save(() => {
+        return res.redirect('/');
+      });
+    });
   } else {
     req.session.status = 400;
     req.session.alert.errorMessages.push('You are not signed in.');
+    return req.session.save(() => {
+      return res.redirect('/');
+    });
   }
-  return req.session.save(() => {
-    return res.redirect('/');
-  });
 };
 exports.getLogout = getLogout;
 
@@ -130,6 +147,7 @@ const postSignup = [
   check('lastName').not().isEmpty().withMessage('A last name must be provided.'),
   check('password').not().isEmpty().withMessage('A password must be provided.'),
   check('confirmPassword').not().isEmpty().withMessage('A confirmation password must be provided.'),
+  check('pin').not().isEmpty().withMessage('A registration PIN must be provided.'),
   (req, res, next) => {
     const errors = validationResult(req).formatWith(({ msg }) => { return `${msg}`; });
     if (!errors.isEmpty()) {
@@ -142,6 +160,15 @@ const postSignup = [
         return res.redirect('/signup');
       });
     }
+
+    if (req.body.pin !== process.env.REGISTRATION_PIN) {
+      req.session.status = 400;
+      req.session.alert.errorMessages.push('Invalid registration PIN');
+      return req.session.save(() => {
+        return res.redirect('/signup');
+      });
+    }
+
     if (req.body.password !== req.body.confirmPassword) {
       // Passwords don't match - send back to signup page with error
       req.session.status = 400;
@@ -196,6 +223,11 @@ const postSignup = [
           return req.logIn(newMember, (err) => {
             if (err) return next(err);
             req.session.status = 201;
+            req.session.alert = {
+              errorMessages: [],
+              infoMessages: [],
+              successMessages: [],
+            };
             req.session.alert.successMessages.push('Account created!');
             return req.session.save(() => {
               return res.redirect('/');

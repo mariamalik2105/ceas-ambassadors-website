@@ -56,6 +56,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: 'password',
         confirmPassword: 'password',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(201);
@@ -71,6 +72,54 @@ describe('Account Tests', () => {
     });
   });
 
+  it('POST signup with no PIN', () => {
+    response = request.agent(app)
+      .post('/signup')
+      .send({
+        email: 'bad_email@mail.uc.edu',
+        firstName: 'Test',
+        lastName: 'TestPerson',
+        password: 'test_password',
+        confirmPassword: 'test_password',
+        pin: '',
+      })
+      .redirects(1)
+      .expect(400);
+    return response.then(() => {
+      return models.Member.findOne({
+        where: {
+          email: 'bad_email@mail.uc.edu',
+        },
+      }).then((member) => {
+        assert(!member);
+      });
+    });
+  });
+
+  it('POST signup with incorrect PIN', () => {
+    response = request.agent(app)
+      .post('/signup')
+      .send({
+        email: 'bad_email@mail.uc.edu',
+        firstName: 'Test',
+        lastName: 'TestPerson',
+        password: 'test_password',
+        confirmPassword: 'test_password',
+        pin: 'wrong_pin',
+      })
+      .redirects(1)
+      .expect(400);
+    return response.then(() => {
+      return models.Member.findOne({
+        where: {
+          email: 'bad_email@mail.uc.edu',
+        },
+      }).then((member) => {
+        assert(!member);
+      });
+    });
+  });
+
   // POST signup with no email
   it('POST signup with no email', () => {
     response = request.agent(app)
@@ -81,6 +130,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: 'test_password',
         confirmPassword: 'test_password',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -104,6 +154,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: '',
         confirmPassword: 'test_password',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -125,6 +176,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: 'test_password',
         confirmPassword: '',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -146,6 +198,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: 'test_password',
         confirmPassword: 'test_password_bad',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -166,6 +219,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: 'test_password',
         confirmPassword: 'test_password',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -186,6 +240,7 @@ describe('Account Tests', () => {
         firstName: 'Test',
         password: 'test_password',
         confirmPassword: 'test_password',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -210,6 +265,7 @@ describe('Account Tests', () => {
         lastName: 'TestPerson',
         password: 'test_password',
         confirmPassword: 'test_password',
+        pin: process.env.REGISTRATION_PIN,
       })
       .redirects(1)
       .expect(400);
@@ -301,6 +357,7 @@ describe('Account Tests', () => {
           lastName: 'TestPerson',
           password: 'password',
           confirmPassword: 'password',
+          pin: process.env.REGISTRATION_PIN,
         })
         .redirects(1)
         .expect(400, done);
@@ -366,6 +423,7 @@ describe('Account Tests', () => {
           lastName: 'TestPerson',
           password: 'password',
           confirmPassword: 'password',
+          pin: process.env.REGISTRATION_PIN,
         })
         .redirects(1)
         .expect(400, done);
