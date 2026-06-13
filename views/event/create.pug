@@ -24,6 +24,16 @@ block content
     - isEdit = 'true'
   else
     - isEdit = 'false'
+  -
+    function getIsoDate(dateVal) {
+      if (!dateVal || dateVal === '') return '';
+      if (dateVal instanceof Date) return dateVal.toISOString();
+      const parsed = Date.parse(dateVal);
+      if (!isNaN(parsed)) return new Date(parsed).toISOString();
+      return dateVal;
+    }
+  - startVal = getIsoDate(event.start_time)
+  - endVal = getIsoDate(event.end_time)
   .container
     .box-border
       if isEdit === 'true'
@@ -42,14 +52,14 @@ block content
               input.form-control.form-control-sm(type='text', name='title', value=event.title, placeholder='Tuesday Tour', tabindex=1)
             div.form-group
               label Start Time:
-              input.form-control.form-control-sm(type='text', name='startTime', value=event.start_time, placeholder='2018 January 01 10:00 AM', tabindex=3)
+              input.form-control.form-control-sm(type='text', id='startTimeInput', name='startTime', value=startVal, placeholder='2018 January 01 10:00 AM', tabindex=3)
           .right-grid
             div.form-group
               label Location:
               input.form-control.form-control-sm(type='text', name='location', value=event.location, placeholder='653 Baldwin Hall', tabindex=2)
             div.form-group
               label End Time:
-              input.form-control.form-control-sm(type='text', name='endTime', value=event.end_time, placeholder='2018 January 01 11:00 AM', tabindex=4)
+              input.form-control.form-control-sm(type='text', id='endTimeInput', name='endTime', value=endVal, placeholder='2018 January 01 11:00 AM', tabindex=4)
         div.form-group
           label Description:
           input.form-control.form-control-sm(type='text', name='description', value=event.description, placeholder='This event...', tabindex=5)
@@ -71,3 +81,6 @@ block content
           input.submit(type='submit', name='create', value='Edit Event', tabindex=9)
         else
           input.submit(type='submit', name='create', value='Create Event', tabindex=8)
+      link(rel='stylesheet', href='/stylesheets/flatpickr.min.css')
+      script(src='/javascripts/flatpickr.min.js')
+      script(src='/javascripts/event-create.js')
