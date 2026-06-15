@@ -23,7 +23,6 @@ async function logSignupToGoogleSheets(event, member, status) {
 
     const values = [
       [
-        new Date().toISOString(),
         member.email,
         member.first_name || '',
         member.last_name || '',
@@ -31,6 +30,7 @@ async function logSignupToGoogleSheets(event, member, status) {
         event.start_time ? new Date(event.start_time).toISOString() : '',
         event.location || '',
         status,
+        new Date().toISOString(),
       ],
     ];
 
