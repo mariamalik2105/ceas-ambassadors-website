@@ -30,13 +30,14 @@ async function logSignupToGoogleSheets(event, member, status) {
         event.start_time ? new Date(event.start_time).toISOString() : '',
         event.location || '',
         status,
+        event.description || '',
         new Date().toISOString(),
       ],
     ];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${sheetName}!A:H`,
+      range: `${sheetName}!A:I`,
       valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
