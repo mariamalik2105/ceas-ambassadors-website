@@ -26,6 +26,7 @@ async function sendSignupNotification(event, member, status) {
       lastName: member.last_name || '',
       eventTitle: event.title,
       startTime: event.start_time ? new Date(event.start_time).toISOString() : '',
+      endTime: event.end_time ? new Date(event.end_time).toISOString() : '',
       location: event.location || '',
       status,
       description: event.description || '',
