@@ -3,7 +3,7 @@
  */
 const { check, validationResult } = require('express-validator');
 const models = require('../models');
-const { logSignupToGoogleSheets } = require('../utils/googleSheets');
+const { sendSignupNotification } = require('../utils/email');
 
 /**
  * Get details page for a specific event specified in req.params.id
@@ -548,7 +548,7 @@ const postSignup = (req, res, next) => {
         member_id: member.id,
         status, // shorthand for status: status,
       }).then(() => {
-        logSignupToGoogleSheets(event, member, status);
+        sendSignupNotification(event, member, status);
 
         req.session.status = 201;
         req.session.alert.successMessages.push(`Signed up for ${event.title}`);
