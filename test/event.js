@@ -144,6 +144,7 @@ describe('Event Tests', () => {
           title: 'Test Event!',
           startTime: '2050 January 01 10:00 AM',
           endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -404,6 +405,7 @@ describe('Event Tests', () => {
           title: 'Test Event!',
           startTime: '2050 January 01 10:00 AM',
           endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -430,6 +432,7 @@ describe('Event Tests', () => {
         .send({
           startTime: '2050 January 01 10:00 AM',
           endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -455,6 +458,7 @@ describe('Event Tests', () => {
           title: 'No location event',
           startTime: '2050 January 01 10:00 AM',
           endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
           description: 'A test event',
           isPublic: 'on',
           isMeeting: 'off',
@@ -478,6 +482,7 @@ describe('Event Tests', () => {
         .send({
           title: 'No Start time',
           endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -502,6 +507,7 @@ describe('Event Tests', () => {
         .send({
           title: 'No end time',
           startTime: '2050 January 01 10:00 AM',
+          callTime: '2050 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -527,6 +533,7 @@ describe('Event Tests', () => {
           title: 'Start time and end time out of order',
           startTime: '2050 January 01 11:00 AM',
           endTime: '2050 January 01 10:00 AM',
+          callTime: '2050 January 01 10:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -552,6 +559,7 @@ describe('Event Tests', () => {
           title: 'Start time and end time out of order',
           startTime: '2000 January 01 10:00 AM',
           endTime: '2000 January 02 10:01 AM',
+          callTime: '2000 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -580,6 +588,7 @@ describe('Event Tests', () => {
           title: 'Start time and end time out of order',
           startTime: '2000 January 01 10:00 AM',
           endTime: '2000 January 01 11:00 AM',
+          callTime: '2000 January 01 09:50 AM',
           location: 'Baldwin Hall',
           description: 'A test event',
           isPublic: 'on',
@@ -594,6 +603,55 @@ describe('Event Tests', () => {
         }).then((events) => {
           // assert that event does exist
           assert.equal(events.length, 1, 'Event should exist');
+        });
+      });
+    });
+
+    // POST create event with no call time
+    it('POST to create event with no call time', () => {
+      response = agent.post('/event/create')
+        .send({
+          title: 'No call time',
+          startTime: '2050 January 01 10:00 AM',
+          endTime: '2050 January 01 11:00 AM',
+          location: 'Baldwin Hall',
+          description: 'A test event',
+          isPublic: 'on',
+          isMeeting: 'off',
+        })
+        .redirects(1)
+        .expect(400);
+
+      return response.then(() => {
+        return models.Event.findAll({
+          where: {},
+        }).then((events) => {
+          assert.equal(events.length, 0, 'Event should not exist');
+        });
+      });
+    });
+
+    // POST create event with invalid call time
+    it('POST to create event with invalid call time', () => {
+      response = agent.post('/event/create')
+        .send({
+          title: 'Invalid call time',
+          startTime: '2050 January 01 10:00 AM',
+          endTime: '2050 January 01 11:00 AM',
+          callTime: 'not-a-date',
+          location: 'Baldwin Hall',
+          description: 'A test event',
+          isPublic: 'on',
+          isMeeting: 'off',
+        })
+        .redirects(1)
+        .expect(400);
+
+      return response.then(() => {
+        return models.Event.findAll({
+          where: {},
+        }).then((events) => {
+          assert.equal(events.length, 0, 'Event should not exist');
         });
       });
     });
@@ -962,6 +1020,7 @@ describe('Event Tests', () => {
             title: event.title,
             startTime: event.start_time,
             endTime: event.end_time,
+            callTime: event.call_time,
             location: 'edited',
             description: event.description,
             isPublic,
@@ -990,6 +1049,7 @@ describe('Event Tests', () => {
         title: 'Test Meeting',
         start_time: date,
         end_time: date + common.getEventLength(),
+        call_time: date - 10 * 60 * 1000,
         location: 'Your computer',
         public: true,
         meeting: false,
@@ -1004,6 +1064,7 @@ describe('Event Tests', () => {
             title: event.title,
             startTime: event.start_time,
             endTime: event.end_time,
+            callTime: event.start_time,
             location: 'edited',
             description: event.description,
             isPublic,
@@ -1032,6 +1093,7 @@ describe('Event Tests', () => {
             title: event.title,
             startTime: event.start_time,
             endTime: event.end_time,
+            callTime: event.call_time,
             location: event.location,
             description: event.description,
             isPublic,

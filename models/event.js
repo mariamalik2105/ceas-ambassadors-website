@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: false,
     },
+    call_time: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
     description: DataTypes.TEXT,
     location: {
       type: DataTypes.STRING,

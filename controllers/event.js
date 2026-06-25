@@ -194,12 +194,13 @@ exports.getCreate = getCreate;
  * @param {*} req - incoming request
  * @param {*} res - outgoing response
  * @description Expects the following req.body objects:
- * `title`, `startTime`, `endTime`, `location`, `description`, `isMeeting`, `isPublic`
+ * `title`, `startTime`, `endTime`, `callTime`, `location`, `description`, `isMeeting`, `isPublic`
  */
 const postCreateEdit = [
   check('title').not().isEmpty().withMessage('A title must be set.'),
   check('startTime').not().isEmpty().withMessage('A start time must be supplied.'),
   check('endTime').not().isEmpty().withMessage('An end time must be supplied.'),
+  check('callTime').not().isEmpty().withMessage('A call time must be supplied.'),
   check('location').not().isEmpty().withMessage('A location must be set.'),
   (req, res, next) => {
     // Ensure a user is making the request
@@ -241,14 +242,18 @@ const postCreateEdit = [
     // Convert string times to Date objects
     const startTime = Date.parse(req.body.startTime);
     const endTime = Date.parse(req.body.endTime);
+    const callTime = Date.parse(req.body.callTime);
 
-    // check for invalid start/end times
-    if (Number.isNaN(startTime) || Number.isNaN(endTime)) {
+    // check for invalid start/end/call times
+    if (Number.isNaN(startTime) || Number.isNaN(endTime) || Number.isNaN(callTime)) {
       if (Number.isNaN(startTime)) {
         req.session.alert.errorMessages.push('The start time is not a valid time.');
       }
       if (Number.isNaN(endTime)) {
         req.session.alert.errorMessages.push('The end time is not a valid time.');
+      }
+      if (Number.isNaN(callTime)) {
+        req.session.alert.errorMessages.push('The call time is not a valid time.');
       }
       req.session.status = 400;
       return req.session.save(() => {
@@ -308,6 +313,7 @@ const postCreateEdit = [
           title: req.body.title,
           start_time: startTime,
           end_time: endTime,
+          call_time: callTime,
           description: req.body.description,
           location: req.body.location,
           public: isPublic,
@@ -329,6 +335,7 @@ const postCreateEdit = [
       title: req.body.title,
       start_time: startTime,
       end_time: endTime,
+      call_time: callTime,
       description: req.body.description,
       location: req.body.location,
       sign_up_limit: req.body.signUpLimit,
