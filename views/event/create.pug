@@ -41,7 +41,7 @@ block content
       if isEdit === 'true'
         h1.create-title Edit Event
       else
-        h1.create-title Create Event
+        h1.create-title Create Event (Event 1)
       form.create-event(id='createEvent', action='/event/create', method='post')
         //- Hidden data for editing
         input(type='hidden', name='_csrf', value=csrfToken)
@@ -78,6 +78,10 @@ block content
           div.form-group.form-check
             input.form-check-input(type='checkbox', name='isMeeting', checked=event.meeting, tabindex=7)
             label.form-check-label Meeting
+          div.form-group
+            label Number of Duplicates (Additional Copies):
+            input.form-control.form-control-sm(type='number', id='duplicateCountInput', name='duplicateCount', value='0', min='0', max='50', tabindex=8)
+          div#duplicateFieldsContainer
         if isEdit === 'true'
           div.form-group.form-check
             input.form-check-input(type="checkbox", name='isDisabled', checked=event.is_disabled, tabindex=8)

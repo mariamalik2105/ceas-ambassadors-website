@@ -330,6 +330,89 @@ const postCreateEdit = [
         }).catch(next);
       });
     }
+    const getDuplicateArray = (val) => {
+      if (!val) return [];
+      return Array.isArray(val) ? val : [val];
+    };
+
+    const duplicateCount = parseInt(req.body.duplicateCount || '0', 10);
+    const dupTitles = getDuplicateArray(req.body.duplicate_title);
+    const dupStartTimes = getDuplicateArray(req.body.duplicate_startTime);
+    const dupEndTimes = getDuplicateArray(req.body.duplicate_endTime);
+    const dupCallTimes = getDuplicateArray(req.body.duplicate_callTime);
+    const dupLocations = getDuplicateArray(req.body.duplicate_location);
+
+    const duplicatesToCreate = [];
+    const duplicateErrors = [];
+
+    if (duplicateCount > 0) {
+      for (let i = 0; i < duplicateCount; i += 1) {
+        const title = dupTitles[i] || req.body.title;
+        const location = dupLocations[i] || req.body.location;
+        const startTimeStr = dupStartTimes[i];
+        const endTimeStr = dupEndTimes[i];
+        const callTimeStr = dupCallTimes[i];
+
+        if (!title) {
+          duplicateErrors.push(`Duplicate #${i + 1}: A title must be set`);
+        }
+        if (!location) {
+          duplicateErrors.push(`Duplicate #${i + 1}: A location must be set`);
+        }
+        if (!startTimeStr) {
+          duplicateErrors.push(`Duplicate #${i + 1}: A start time must be supplied`);
+        }
+        if (!endTimeStr) {
+          duplicateErrors.push(`Duplicate #${i + 1}: An end time must be supplied`);
+        }
+        if (!callTimeStr) {
+          duplicateErrors.push(`Duplicate #${i + 1}: A call time must be supplied`);
+        }
+
+        if (startTimeStr && endTimeStr && callTimeStr) {
+          const dupStartTime = Date.parse(startTimeStr);
+          const dupEndTime = Date.parse(endTimeStr);
+          const dupCallTime = Date.parse(callTimeStr);
+
+          if (Number.isNaN(dupStartTime)) {
+            duplicateErrors.push(`Duplicate #${i + 1}: The start time is not a valid time`);
+          }
+          if (Number.isNaN(dupEndTime)) {
+            duplicateErrors.push(`Duplicate #${i + 1}: The end time is not a valid time`);
+          }
+          if (Number.isNaN(dupCallTime)) {
+            duplicateErrors.push(`Duplicate #${i + 1}: The call time is not a valid time`);
+          }
+
+          if (!Number.isNaN(dupStartTime)
+            && !Number.isNaN(dupEndTime)
+            && !Number.isNaN(dupCallTime)) {
+            if (dupStartTime >= dupEndTime) {
+              duplicateErrors.push(`Duplicate #${i + 1}: The end time must be after the start time`);
+            }
+            if (dupEndTime - dupStartTime > 24 * 60 * 60 * 1000) {
+              duplicateErrors.push(`Duplicate #${i + 1}: The maximum allowed event length is 24 hours`);
+            }
+            duplicatesToCreate.push({
+              title,
+              start_time: dupStartTime,
+              end_time: dupEndTime,
+              call_time: dupCallTime,
+              location,
+            });
+          }
+        }
+      }
+    }
+
+    if (duplicateErrors.length > 0) {
+      req.session.status = 400;
+      req.session.alert.errorMessages.push(...duplicateErrors);
+      return req.session.save(() => {
+        return res.redirect(redirectUrl);
+      });
+    }
+
     // not edit - create the event
     return models.Event.create({
       title: req.body.title,
@@ -343,7 +426,29 @@ const postCreateEdit = [
       meeting: isMeeting,
       created_by: req.user.id,
     }).then((event) => {
-      // the event was succesfully created!
+      if (duplicatesToCreate.length > 0) {
+        const dupPromises = duplicatesToCreate.map((dup) => {
+          return models.Event.create({
+            title: dup.title,
+            start_time: dup.start_time,
+            end_time: dup.end_time,
+            call_time: dup.call_time,
+            description: req.body.description,
+            location: dup.location,
+            sign_up_limit: req.body.signUpLimit,
+            public: isPublic,
+            meeting: isMeeting,
+            created_by: req.user.id,
+          });
+        });
+        return Promise.all(dupPromises).then(() => {
+          req.session.status = 201;
+          req.session.alert.successMessages.push('Events created successfully');
+          return req.session.save(() => {
+            return res.redirect(`/event/${event.id}`);
+          });
+        });
+      }
       req.session.status = 201;
       req.session.alert.successMessages.push('Event created!');
       return req.session.save(() => {

@@ -420,8 +420,68 @@ describe('Event Tests', () => {
             title: 'Test Event!',
           },
         }).then((events) => {
-          // assert that event exists
           assert(events[0], 'Event does not exist');
+        });
+      });
+    });
+
+    it('POST to create event with duplicates as super user', () => {
+      response = agent.post('/event/create')
+        .send({
+          title: 'Main Event',
+          startTime: '2050 January 01 10:00 AM',
+          endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
+          location: 'Main Location',
+          description: 'A test event',
+          isPublic: 'on',
+          isMeeting: 'off',
+          duplicateCount: '2',
+          duplicate_title: ['Dup Event 1', 'Dup Event 2'],
+          duplicate_startTime: ['2050 January 02 10:00 AM', '2050 January 03 10:00 AM'],
+          duplicate_endTime: ['2050 January 02 11:00 AM', '2050 January 03 11:00 AM'],
+          duplicate_callTime: ['2050 January 02 09:50 AM', '2050 January 03 09:50 AM'],
+          duplicate_location: ['Location 1', 'Location 2'],
+        })
+        .redirects(1)
+        .expect(201);
+
+      return response.then(() => {
+        return models.Event.findAll({
+          order: [['title', 'ASC']],
+        }).then((events) => {
+          assert.equal(events.length, 3);
+          assert.equal(events[0].title, 'Dup Event 1');
+          assert.equal(events[1].title, 'Dup Event 2');
+          assert.equal(events[2].title, 'Main Event');
+        });
+      });
+    });
+
+    it('POST to create event with invalid duplicate as super user', () => {
+      response = agent.post('/event/create')
+        .send({
+          title: 'Main Event',
+          startTime: '2050 January 01 10:00 AM',
+          endTime: '2050 January 01 11:00 AM',
+          callTime: '2050 January 01 09:50 AM',
+          location: 'Main Location',
+          description: 'A test event',
+          isPublic: 'on',
+          isMeeting: 'off',
+          duplicateCount: '1',
+          duplicate_title: [''],
+          duplicate_startTime: ['2050 January 02 10:00 AM'],
+          duplicate_endTime: ['2050 January 02 09:00 AM'],
+          duplicate_callTime: ['2050 January 02 09:50 AM'],
+          duplicate_location: ['Location 1'],
+        })
+        .redirects(1)
+        .expect(400);
+
+      return response.then(() => {
+        return models.Event.findAll({}).then((events) => {
+          assert.equal(events.length, 0);
         });
       });
     });
