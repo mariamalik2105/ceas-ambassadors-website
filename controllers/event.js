@@ -76,14 +76,14 @@ const getDetails = (req, res, next) => {
         // that the meeting is a private meeting
         res.locals.alert.infoMessages.push('This event is private. It is only visible to attendees and super users.');
       }
-      // members is not an array of full members - it only has the above selected attrs + status
       const confirmedAttendees = [];
       const notNeededAttendees = [];
       const unconfirmedAttendees = [];
       const excusedAttendees = [];
       const noShowAttendees = [];
-      const membersNotSignedUp = allMembers;
-      // Separate members into confirmed, not needed, and unconfirmed
+      const membersNotSignedUp = allMembers.filter((m) => {
+        return !members.some((attendee) => attendee.id === m.id);
+      });
       for (let i = 0; i < members.length; i += 1) {
         if (members[i].is_certified === 0) {
           numSignUps -= 1;
@@ -511,14 +511,14 @@ const getAttendanceStatus = (req, res, next) => {
     });
 
     return Promise.all([eventAttendeesPromise, allMembersPromise]).then(([members, allMembers]) => {
-      // members is not an array of full members - it only has the above selected attrs + status
       const confirmedAttendees = [];
       const notNeededAttendees = [];
       const unconfirmedAttendees = [];
       const excusedAttendees = [];
       const noShowAttendees = [];
-      const membersNotSignedUp = allMembers;
-      // Separate members into confirmed, not needed, and unconfirmed
+      const membersNotSignedUp = allMembers.filter((m) => {
+        return !members.some((attendee) => attendee.id === m.id);
+      });
       for (let i = 0; i < members.length; i += 1) {
         if (members[i].status === models.Attendance.getStatusConfirmed()) {
           confirmedAttendees.push(members[i]);
