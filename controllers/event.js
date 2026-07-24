@@ -299,16 +299,17 @@ const postCreateEdit = [
       isDisabled = 1;
     }
 
+    let points = parseFloat(req.body.points);
+    if (Number.isNaN(points) || points === null || points === undefined) {
+      points = isMeeting ? 0 : (endTime - startTime) / 3600000;
+    }
+
     if (req.body.isEdit === 'true') {
       return models.Event.findByPk(req.body.eventId).then((event) => {
-        // For edits, switching between meetings and non-meetings is disallowed
         if (isMeeting !== event.meeting) {
-          // The UI doesn't even display meeting check box, so just set it back to the default
-          // value quietly
           isMeeting = event.meeting;
         }
 
-        // update the event object
         return event.update({
           title: req.body.title,
           start_time: startTime,
@@ -321,6 +322,7 @@ const postCreateEdit = [
           created_by: req.user.id,
           is_disabled: isDisabled,
           sign_up_limit: req.body.signUpLimit,
+          points: points,
         }).then(() => {
           req.session.status = 201;
           req.session.alert.successMessages.push('Event updated!');
@@ -399,6 +401,7 @@ const postCreateEdit = [
               end_time: dupEndTime,
               call_time: dupCallTime,
               location,
+              points,
             });
           }
         }
@@ -413,7 +416,6 @@ const postCreateEdit = [
       });
     }
 
-    // not edit - create the event
     return models.Event.create({
       title: req.body.title,
       start_time: startTime,
@@ -425,6 +427,7 @@ const postCreateEdit = [
       public: isPublic,
       meeting: isMeeting,
       created_by: req.user.id,
+      points: points,
     }).then((event) => {
       if (duplicatesToCreate.length > 0) {
         const dupPromises = duplicatesToCreate.map((dup) => {
@@ -439,6 +442,7 @@ const postCreateEdit = [
             public: isPublic,
             meeting: isMeeting,
             created_by: req.user.id,
+            points: dup.points,
           });
         });
         return Promise.all(dupPromises).then(() => {

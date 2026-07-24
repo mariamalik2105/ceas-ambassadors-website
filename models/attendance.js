@@ -75,7 +75,7 @@ module.exports = (sequelize, DataTypes) => {
             // If the code gets this far, the status is not needed, which is not allowed
             throw Error('Not Needed is not an allowable state for meeting attendance records.');
           }
-          const length = event.end_time - event.start_time;
+          const length = (event.points !== null && event.points !== undefined) ? event.points * 3600000 : (event.end_time - event.start_time);
           if (attendance.status === Attendance.getStatusConfirmed()) {
             return member.update({
               service: member.service + length,
@@ -141,7 +141,7 @@ module.exports = (sequelize, DataTypes) => {
             });
           }
           // Not a meeting
-          const length = event.end_time - event.start_time;
+          const length = (event.points !== null && event.points !== undefined) ? event.points * 3600000 : (event.end_time - event.start_time);
           let serviceChange = 0;
           let serviceNotNeededChange = 0;
           let serviceExcusedChange = 0;
@@ -209,7 +209,7 @@ module.exports = (sequelize, DataTypes) => {
             // If the code gets this far, the status is not needed, which is not allowed
             throw Error('Not Needed is not an allowable state for meeting attendance records.');
           }
-          const length = event.end_time - event.start_time;
+          const length = (event.points !== null && event.points !== undefined) ? event.points * 3600000 : (event.end_time - event.start_time);
           if (attendance.status === Attendance.getStatusConfirmed()) {
             return member.update({
               service: member.service - length,

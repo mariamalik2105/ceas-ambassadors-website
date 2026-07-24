@@ -45,6 +45,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: 0,
     },
+    points: {
+      type: DataTypes.DOUBLE,
+      allowNull: true,
+      defaultValue: null,
+    },
     // also created_by - defined below in associations
   }, {
     // set so that all autocreated table names are underscored instead of camel cased
@@ -86,11 +91,10 @@ module.exports = (sequelize, DataTypes) => {
           return Promise.resolve();
         }
 
-        const lengthChange = (event.end_time - event.start_time)
-          - (event._previousDataValues.end_time - event._previousDataValues.start_time);
-        if (lengthChange === 0) {
-          // The time didn't change, so it is unnecessary to actually process all these members
-          // return promise for consistent return value
+        const currentPoints = event.points !== null ? event.points : (event.end_time - event.start_time) / 3600000;
+        const previousPoints = event._previousDataValues.points !== null ? event._previousDataValues.points : (event._previousDataValues.end_time - event._previousDataValues.start_time) / 3600000;
+        const pointsChange = (currentPoints - previousPoints) * 3600000;
+        if (pointsChange === 0) {
           return Promise.resolve();
         }
 
@@ -109,22 +113,22 @@ module.exports = (sequelize, DataTypes) => {
             for (let i = 0; i < output.length; i += 1) {
               if (attendances[i].status === sequelize.models.Attendance.getStatusConfirmed()) {
                 returns.push(output[i].update({
-                  service: output[i].service + lengthChange,
+                  service: output[i].service + pointsChange,
                 }));
               }
               if (attendances[i].status === sequelize.models.Attendance.getStatusNotNeeded()) {
                 returns.push(output[i].update({
-                  service_not_needed: output[i].service_not_needed + lengthChange,
+                  service_not_needed: output[i].service_not_needed + pointsChange,
                 }));
               }
               if (attendances[i].status === sequelize.models.Attendance.getStatusExcused()) {
                 returns.push(output[i].update({
-                  service_excused: output[i].service_excused + lengthChange,
+                  service_excused: output[i].service_excused + pointsChange,
                 }));
               }
               if (attendances[i].status === sequelize.models.Attendance.getStatusNoShow()) {
                 returns.push(output[i].update({
-                  service_no_show: output[i].service_no_show + lengthChange,
+                  service_no_show: output[i].service_no_show + pointsChange,
                 }));
               }
             }

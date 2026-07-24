@@ -71,6 +71,8 @@ block content
       span= (event.sign_up_limit - numSignUps) + " Spots Remain"
     div.date-loc
       p #{new_start_date} - #{new_end_date} at #{event.location}
+      if !event.meeting
+        p Points: #{event.points}
     if new_call_time
       p.call-time(style="background-color: #fef08a; padding: 4px 8px; border-radius: 4px; display: inline-block; border: 1px solid #fde047; font-weight: bold; color: #854d0e;")
         strong Call Time: 
