@@ -81,7 +81,7 @@ block content
       p.description #{event.description}
 
     if user && (!event.meeting || user.super_user)
-    if (event.start_time.getTime() > Date.now())
+    if (event.end_time.getTime() > Date.now())
       div.signup-actions-container(style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;")
         if (numSignUps < event.sign_up_limit)
           if !event.is_disabled
