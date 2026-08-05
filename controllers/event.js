@@ -285,10 +285,10 @@ const postCreateEdit = [
       req.session.alert.infoMessages.push('This event was created in the past.');
     }
 
-    // handle isPublic and isMeeting flags
     let isPublic = false;
     let isMeeting = false;
     let isDisabled = false;
+    let emailsEnabled = false;
     if (req.body.isPublic === 'on') {
       isPublic = true;
     }
@@ -297,6 +297,9 @@ const postCreateEdit = [
     }
     if (req.body.isDisabled === 'on') {
       isDisabled = 1;
+    }
+    if (req.body.emailsEnabled === 'on') {
+      emailsEnabled = true;
     }
 
     let points = parseFloat(req.body.points);
@@ -321,6 +324,7 @@ const postCreateEdit = [
           meeting: isMeeting,
           created_by: req.user.id,
           is_disabled: isDisabled,
+          emails_enabled: emailsEnabled,
           sign_up_limit: req.body.signUpLimit,
           points: points,
         }).then(() => {
@@ -402,6 +406,7 @@ const postCreateEdit = [
               call_time: dupCallTime,
               location,
               points,
+              emails_enabled: emailsEnabled,
             });
           }
         }
@@ -428,6 +433,7 @@ const postCreateEdit = [
       meeting: isMeeting,
       created_by: req.user.id,
       points: points,
+      emails_enabled: emailsEnabled,
     }).then((event) => {
       if (duplicatesToCreate.length > 0) {
         const dupPromises = duplicatesToCreate.map((dup) => {
@@ -443,6 +449,7 @@ const postCreateEdit = [
             meeting: isMeeting,
             created_by: req.user.id,
             points: dup.points,
+            emails_enabled: dup.emails_enabled,
           });
         });
         return Promise.all(dupPromises).then(() => {
@@ -664,7 +671,9 @@ const postSignup = (req, res, next) => {
         member_id: member.id,
         status, // shorthand for status: status,
       }).then(() => {
-        sendSignupNotification(event, member, status);
+        if (event.emails_enabled) {
+          sendSignupNotification(event, member, status);
+        }
 
         req.session.status = 201;
         req.session.alert.successMessages.push(`Signed up for ${event.title}`);

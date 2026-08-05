@@ -1,0 +1,1 @@
+ALTER TABLE `Events` ADD COLUMN `emails_enabled` TINYINT(1) NOT NULL DEFAULT 1;

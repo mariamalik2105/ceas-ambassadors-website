@@ -21,6 +21,7 @@ block content
     - event.public = true
     - event.meeting = false
     - event.sign_up_limit = 20
+    - event.emails_enabled = true
   if isEdit
     - isEdit = 'true'
   else
@@ -77,6 +78,9 @@ block content
         div.form-group.form-check
           input.form-check-input(type='checkbox', name='isPublic', checked=event.public, tabindex=6)
           label.form-check-label Public Event
+        div.form-group.form-check
+          input.form-check-input(type='checkbox', name='emailsEnabled', checked=event.emails_enabled, tabindex=6.5)
+          label.form-check-label Send Email Notifications
         if isEdit === 'false'
           div.form-group.form-check
             input.form-check-input(type='checkbox', name='isMeeting', checked=event.meeting, tabindex=7)
