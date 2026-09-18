@@ -69,6 +69,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
+    super_super_user: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     private_user: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

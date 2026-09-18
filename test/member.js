@@ -390,115 +390,188 @@ describe('Member tests', () => {
     });
 
     // POST /member/:email/update-attributes to elevate to super user
-    it('POST /member/:id/update-attributes to elevate super user', () => {
-      return models.Member.create({
-        email: common.getNormalUserEmail(),
-        password: 'blah', // doesn't matter because we won't be logging in
-        accend: false,
-        super_user: false,
-        private_user: false,
-      }).then((createdMember) => {
-        const response = agent
-          .post(`/member/${createdMember.id}/update-attributes?super_user=true`)
-          .redirects(1)
-          .expect(200);
-        return response.then(() => {
-          return models.Member.findByPk(createdMember.id).then((member) => {
-            assert.equal(member.super_user, true);
-            assert.equal(member.private_user, false);
-          });
-        });
+it('POST /member/:id/update-attributes prevents normal super user from elevating super user', () => {
+  return models.Member.create({
+    email: common.getNormalUserEmail(),
+    password: 'blah',
+    accend: false,
+    super_user: false,
+    private_user: false,
+  }).then((createdMember) => {
+    const response = agent
+      .post(`/member/${createdMember.id}/update-attributes?super_user=true`)
+      .redirects(1)
+      .expect(403);
+
+    return response.then(() => {
+      return models.Member.findByPk(createdMember.id).then((member) => {
+        assert.equal(member.super_user, false);
+        assert.equal(member.private_user, false);
       });
     });
+  });
+});
 
     // POST /member/:email/update-attributes to demote from super user
-    it('POST /member/:id/update-attributes to demote super user', () => {
+it('POST /member/:id/update-attributes prevents normal super user from demoting super user', () => {
+  return models.Member.create({
+    email: common.getNormalUserEmail(),
+    password: 'blah',
+    accend: false,
+    super_user: true,
+    private_user: false,
+  }).then((createdMember) => {
+    const response = agent
+      .post(`/member/${createdMember.id}/update-attributes?super_user=false`)
+      .redirects(1)
+      .expect(403);
+
+    return response.then(() => {
+      return models.Member.findByPk(createdMember.id).then((member) => {
+        assert.equal(member.super_user, true);
+        assert.equal(member.private_user, false);
+      });
+    });
+  });
+});
+
+// POST /member/:email/update-attributes to set user to private
+it('POST /member/:id/update-attributes to set user to private', () => {
+  return models.Member.create({
+    email: common.getNormalUserEmail(),
+    password: 'blah', // doesn't matter because we won't be logging in
+    accend: false,
+    super_user: false,
+    private_user: false,
+  }).then((createdMember) => {
+    const response = agent
+      .post(`/member/${createdMember.id}/update-attributes?private_user=true`)
+      .redirects(1)
+      .expect(200);
+    return response.then(() => {
+      return models.Member.findByPk(createdMember.id).then((member) => {
+        assert.equal(member.super_user, false);
+        assert.equal(member.private_user, true);
+      });
+    });
+  });
+});
+
+// POST /member/:email/update-attributes to set user to public
+it('POST /member/:id/update-attributes to set user to public', () => {
+  return models.Member.create({
+    email: common.getNormalUserEmail(),
+    password: 'blah', // doesn't matter because we won't be logging in
+    accend: false,
+    super_user: false,
+    private_user: true,
+  }).then((createdMember) => {
+    const response = agent
+      .post(`/member/${createdMember.id}/update-attributes?private_user=false`)
+      .redirects(1)
+      .expect(200);
+    return response.then(() => {
+      return models.Member.findByPk(createdMember.id).then((member) => {
+        assert.equal(member.super_user, false);
+        assert.equal(member.private_user, false);
+      });
+    });
+  });
+});
+
+// POST /member/:email/update-attributes with bad value for super_user and private_user
+it('POST /member/:id/update-attributes with bad values', () => {
+  return models.Member.create({
+    email: common.getNormalUserEmail(),
+    password: 'blah', // doesn't matter because we won't be logging in
+    accend: false,
+    super_user: false,
+    private_user: true,
+  }).then((createdMember) => {
+    const response = agent
+      .post(`/member/${createdMember.id}/update-attributes?private_user=f&super_user=f`)
+      .redirects(1)
+      .expect(304);
+    return response.then(() => {
+      return models.Member.findByPk(createdMember.id).then((member) => {
+        assert.equal(member.super_user, false);
+        assert.equal(member.private_user, true);
+      });
+    });
+  });
+});
+
+// Super-super user can elevate a normal member to super user
+it('POST /member/:id/update-attributes allows super-super user to elevate super user', () => {
+  return models.Member.findOne({
+    where: {
+      super_user: true,
+    },
+  })
+    .then((member) => {
+      return member.update({
+        super_super_user: true,
+      });
+    })
+    .then(() => {
       return models.Member.create({
         email: common.getNormalUserEmail(),
-        password: 'blah', // doesn't matter because we won't be logging in
+        password: 'blah',
+        accend: false,
+        super_user: false,
+        super_super_user: false,
+        private_user: false,
+      });
+    })
+    .then((createdMember) => {
+      const response = agent
+        .post(`/member/${createdMember.id}/update-attributes?super_user=true`)
+        .redirects(1)
+        .expect(200);
+
+      return response.then(() => {
+        return models.Member.findByPk(createdMember.id).then((member) => {
+          assert.equal(member.super_user, true);
+        });
+      });
+    });
+});
+
+// Super-super user can demote a super user
+it('POST /member/:id/update-attributes allows super-super user to demote super user', () => {
+  return models.Member.findOne({
+    where: {
+      super_user: true,
+    },
+  })
+    .then((member) => {
+      return member.update({
+        super_super_user: true,
+      });
+    })
+    .then(() => {
+      return models.Member.create({
+        email: common.getNormalUserEmail(),
+        password: 'blah',
         accend: false,
         super_user: true,
+        super_super_user: false,
         private_user: false,
-      }).then((createdMember) => {
-        const response = agent
-          .post(`/member/${createdMember.id}/update-attributes?super_user=false`)
-          .redirects(1)
-          .expect(200);
-        return response.then(() => {
-          return models.Member.findByPk(createdMember.id).then((member) => {
-            assert.equal(member.super_user, false);
-            assert.equal(member.private_user, false);
-          });
+      });
+    })
+    .then((createdMember) => {
+      const response = agent
+        .post(`/member/${createdMember.id}/update-attributes?super_user=false`)
+        .redirects(1)
+        .expect(200);
+
+      return response.then(() => {
+        return models.Member.findByPk(createdMember.id).then((member) => {
+          assert.equal(member.super_user, false);
         });
       });
     });
-
-    // POST /member/:email/update-attributes to set user to private
-    it('POST /member/:id/update-attributes to set user to private', () => {
-      return models.Member.create({
-        email: common.getNormalUserEmail(),
-        password: 'blah', // doesn't matter because we won't be logging in
-        accend: false,
-        super_user: false,
-        private_user: false,
-      }).then((createdMember) => {
-        const response = agent
-          .post(`/member/${createdMember.id}/update-attributes?private_user=true`)
-          .redirects(1)
-          .expect(200);
-        return response.then(() => {
-          return models.Member.findByPk(createdMember.id).then((member) => {
-            assert.equal(member.super_user, false);
-            assert.equal(member.private_user, true);
-          });
-        });
-      });
-    });
-
-    // POST /member/:email/update-attributes to set user to public
-    it('POST /member/:id/update-attributes to set user to public', () => {
-      return models.Member.create({
-        email: common.getNormalUserEmail(),
-        password: 'blah', // doesn't matter because we won't be logging in
-        accend: false,
-        super_user: false,
-        private_user: true,
-      }).then((createdMember) => {
-        const response = agent
-          .post(`/member/${createdMember.id}/update-attributes?private_user=false`)
-          .redirects(1)
-          .expect(200);
-        return response.then(() => {
-          return models.Member.findByPk(createdMember.id).then((member) => {
-            assert.equal(member.super_user, false);
-            assert.equal(member.private_user, false);
-          });
-        });
-      });
-    });
-
-    // POST /member/:email/update-attributes with bad value for super_user and private_user
-    it('POST /member/:id/update-attributes with bad values', () => {
-      return models.Member.create({
-        email: common.getNormalUserEmail(),
-        password: 'blah', // doesn't matter because we won't be logging in
-        accend: false,
-        super_user: false,
-        private_user: true,
-      }).then((createdMember) => {
-        const response = agent
-          .post(`/member/${createdMember.id}/update-attributes?private_user=f&super_user=f`)
-          .redirects(1)
-          .expect(304);
-        return response.then(() => {
-          return models.Member.findByPk(createdMember.id).then((member) => {
-            assert.equal(member.super_user, false);
-            assert.equal(member.private_user, true);
-          });
-        });
-      });
-    });
-
+});
     // GET profile of private member
     it('GET profile of private member as super user', () => {
       const email = 'test@mail.uc.edu';

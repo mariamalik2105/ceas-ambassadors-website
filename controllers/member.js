@@ -217,6 +217,7 @@ const postSignup = [
           accend: false,
           on_coop: false,
           super_user: false,
+          super_super_user: false,
           private_user: false,
         }).then((newMember) => {
           // req.logIn requires use of callbacks, doesn't support promises
@@ -582,31 +583,50 @@ const postUpdateAttributes = (req, res, next) => {
     let onCoop = req.query.on_coop;
     let privateUser = req.query.private_user;
     let isCertified = req.query.is_certified;
-    // variable to indicate that something was changed
-    let change = false;
-    if (superUser === 'true') {
-      superUser = true;
-    } else if (superUser === 'false') {
-      superUser = false;
-    } else {
-      // wasn't true or false, set to current value
-      superUser = member.super_user;
-    }
-    if (superUser !== member.super_user) {
-      change = true;
-    }
 
-    if (onCoop === 'true') {
-      onCoop = true;
-    } else if (onCoop === 'false') {
-      onCoop = false;
-    } else {
-      // wasn't tyure or false, set to current value
-      onCoop = member.on_coop;
-    }
-    if (change === false && onCoop !== member.on_coop) {
-      change = true;
-    }
+// variable to indicate that something was changed
+let change = false;
+
+if (superUser === 'true') {
+  superUser = true;
+} else if (superUser === 'false') {
+  superUser = false;
+} else {
+  // wasn't true or false, set to current value
+  superUser = member.super_user;
+}
+
+// Only super-super users may actually change super-user status
+if (
+  superUser !== member.super_user
+  && req.user.super_super_user !== true
+) {
+  req.session.status = 403;
+  req.session.alert.errorMessages.push(
+    'Only authorized administrators can change super user status.',
+  );
+
+  return req.session.save(() => {
+    return res.redirect(`/member/${req.params.id}`);
+  });
+}
+
+if (superUser !== member.super_user) {
+  change = true;
+}
+
+if (onCoop === 'true') {
+  onCoop = true;
+} else if (onCoop === 'false') {
+  onCoop = false;
+} else {
+  // wasn't true or false, set to current value
+  onCoop = member.on_coop;
+}
+
+if (change === false && onCoop !== member.on_coop) {
+  change = true;
+}
 
     if (privateUser === 'true') {
       privateUser = true;

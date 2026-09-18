@@ -76,50 +76,61 @@ block content
     div.profile-super-user
       h1 Modify Member
       h2 Meta Attributes
-      if member.super_user
-        //- descalate super user
-        form(id='superUserDemote', action='/member/' + member.id + '/update-attributes?super_user=false', method='post')
-          input(type='hidden', name='_csrf', value=csrfToken)
-          input.submit-small(type='submit', name='demote', value='Demote Super User')    
-      if !member.super_user
-        //- escalate to super user
-        form(id='superUserElevate', action='/member/' + member.id + '/update-attributes?super_user=true', method='post')
-          input(type='hidden', name='_csrf', value=csrfToken)
-          input.submit-small(type='submit', name='elevate', value='Elevate to Super User')
+
+      if user.super_super_user
+        if member.super_user
+          //- deescalate super user
+          form(id='superUserDemote', action='/member/' + member.id + '/update-attributes?super_user=false', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input.submit-small(type='submit', name='demote', value='Demote Super User')
+
+        if !member.super_user
+          //- escalate to super user
+          form(id='superUserElevate', action='/member/' + member.id + '/update-attributes?super_user=true', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input.submit-small(type='submit', name='elevate', value='Elevate to Super User')
+
       if member.on_coop
         //- Change to in Class
         form(id='changeInClass', action='/member/' + member.id + '/update-attributes?on_coop=false', method='post')
           input(type='hidden', name='_csrf', value=csrfToken)
           input.submit-small(type='submit', name='elevate', value='Change to in class')
+
       if !member.on_coop
         //- Change to on Coop
         form(id='changeOnCoop', action='/member/' + member.id + '/update-attributes?on_coop=true', method='post')
           input(type='hidden', name='_csrf', value=csrfToken)
           input.submit-small(type='submit', name='demote', value='Change to on co-op')
+
       if member.private_user
         //- set to public
         form(id='publicUser', action='/member/' + member.id + '/update-attributes?private_user=false', method='post')
           input(type='hidden', name='_csrf', value=csrfToken)
-          input.submit-small(type='submit', name='elevate', value='Set profile to public')   
+          input.submit-small(type='submit', name='elevate', value='Set profile to public')
+
       if !member.private_user
         //- set to private
         form(id='privateUser', action='/member/' + member.id + '/update-attributes?private_user=true', method='post')
           input(type='hidden', name='_csrf', value=csrfToken)
           input.submit-small(type='submit', name='elevate', value='Set profile to private')
+
       if member.is_certified
         //- set to not certified
         form(id='decertify', action='/member/' + member.id + '/update-attributes?is_certified=false', method='post')
           input(type='hidden', name='_csrf', value=csrfToken)
-          input.submit-small(type='submit', name='elevate', value='Decertify')   
+          input.submit-small(type='submit', name='elevate', value='Decertify')
+
       if !member.is_certified
         //- set to certify
         form(id='certify', action='/member/' + member.id + '/update-attributes?is_certified=true', method='post')
           input(type='hidden', name='_csrf', value=csrfToken)
           input.submit-small(type='submit', name='elevate', value='Certify')
+
       h2 Delete Member
-      form(id='deleteMember', action='/member/' + member.id + '/delete', method='post' onSubmit="return confirm('This will permanently delete this member. Proceed?')")
+      form(id='deleteMember', action='/member/' + member.id + '/delete', method='post', onSubmit="return confirm('This will permanently delete this member. Proceed?')")
         input(type='hidden', name='_csrf', value=csrfToken)
         input.submit-small(type='submit', name='delete', value='Delete Member')
+
       h2 Reset Password
       form(id='resetPassword', action='/member/' + member.id + '/reset-password', method='post', onSubmit="return confirm('This will reset this member\\'s password to a random password. They can change it back once they have logged in. Proceed?')")
         input(type='hidden', name='_csrf', value=csrfToken)
