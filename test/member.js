@@ -572,6 +572,105 @@ it('POST /member/:id/update-attributes allows super-super user to demote super u
       });
     });
 });
+
+// Normal super user cannot elevate a super user to super-super user
+it('POST /member/:id/update-attributes prevents normal super user from elevating super-super user', () => {
+  return models.Member.create({
+    email: common.getNormalUserEmail(),
+    password: 'blah',
+    accend: false,
+    super_user: true,
+    super_super_user: false,
+    private_user: false,
+  }).then((createdMember) => {
+    const response = agent
+      .post(`/member/${createdMember.id}/update-attributes?super_super_user=true`)
+      .redirects(1)
+      .expect(403);
+
+    return response.then(() => {
+      return models.Member.findByPk(createdMember.id).then((member) => {
+        assert.equal(member.super_user, true);
+        assert.equal(member.super_super_user, false);
+      });
+    });
+  });
+});
+
+// Super-super user can elevate a super user to super-super user
+it('POST /member/:id/update-attributes allows super-super user to elevate super-super user', () => {
+  return models.Member.findOne({
+    where: {
+      super_user: true,
+    },
+  })
+    .then((member) => {
+      return member.update({
+        super_super_user: true,
+      });
+    })
+    .then(() => {
+      return models.Member.create({
+        email: common.getNormalUserEmail(),
+        password: 'blah',
+        accend: false,
+        super_user: true,
+        super_super_user: false,
+        private_user: false,
+      });
+    })
+    .then((createdMember) => {
+      const response = agent
+        .post(`/member/${createdMember.id}/update-attributes?super_super_user=true`)
+        .redirects(1)
+        .expect(200);
+
+      return response.then(() => {
+        return models.Member.findByPk(createdMember.id).then((member) => {
+          assert.equal(member.super_user, true);
+          assert.equal(member.super_super_user, true);
+        });
+      });
+    });
+});
+
+// Super-super user can demote another super-super user to super user
+it('POST /member/:id/update-attributes allows super-super user to demote super-super user', () => {
+  return models.Member.findOne({
+    where: {
+      super_user: true,
+    },
+  })
+    .then((member) => {
+      return member.update({
+        super_super_user: true,
+      });
+    })
+    .then(() => {
+      return models.Member.create({
+        email: common.getNormalUserEmail(),
+        password: 'blah',
+        accend: false,
+        super_user: true,
+        super_super_user: true,
+        private_user: false,
+      });
+    })
+    .then((createdMember) => {
+      const response = agent
+        .post(`/member/${createdMember.id}/update-attributes?super_super_user=false`)
+        .redirects(1)
+        .expect(200);
+
+      return response.then(() => {
+        return models.Member.findByPk(createdMember.id).then((member) => {
+          assert.equal(member.super_user, true);
+          assert.equal(member.super_super_user, false);
+        });
+      });
+    });
+});
+
     // GET profile of private member
     it('GET profile of private member as super user', () => {
       const email = 'test@mail.uc.edu';

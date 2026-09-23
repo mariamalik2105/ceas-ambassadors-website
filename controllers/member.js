@@ -561,6 +561,7 @@ const postUpdateAttributes = (req, res, next) => {
       return res.redirect(`/member/${req.params.id}`);
     });
   }
+
   // assert that the user is a super user
   if (req.user.super_user !== true) {
     req.session.status = 403;
@@ -569,6 +570,7 @@ const postUpdateAttributes = (req, res, next) => {
       return res.redirect(`/member/${req.params.id}`);
     });
   }
+
   // get the requested member
   return models.Member.findByPk(req.params.id).then((member) => {
     if (!member) {
@@ -579,66 +581,108 @@ const postUpdateAttributes = (req, res, next) => {
         return res.redirect('/member/');
       });
     }
+
     let superUser = req.query.super_user;
+    let superSuperUser = req.query.super_super_user;
     let onCoop = req.query.on_coop;
     let privateUser = req.query.private_user;
     let isCertified = req.query.is_certified;
 
-// variable to indicate that something was changed
-let change = false;
+    // variable to indicate that something was changed
+    let change = false;
 
-if (superUser === 'true') {
-  superUser = true;
-} else if (superUser === 'false') {
-  superUser = false;
-} else {
-  // wasn't true or false, set to current value
-  superUser = member.super_user;
-}
+    if (superUser === 'true') {
+      superUser = true;
+    } else if (superUser === 'false') {
+      superUser = false;
+    } else {
+      // wasn't true or false, set to current value
+      superUser = member.super_user;
+    }
 
-// Only super-super users may actually change super-user status
-if (
-  superUser !== member.super_user
-  && req.user.super_super_user !== true
-) {
-  req.session.status = 403;
-  req.session.alert.errorMessages.push(
-    'Only authorized administrators can change super user status.',
-  );
+    // Only super-super users may actually change super-user status
+    if (
+      superUser !== member.super_user
+      && req.user.super_super_user !== true
+    ) {
+      req.session.status = 403;
+      req.session.alert.errorMessages.push(
+        'Only authorized administrators can change super user status.',
+      );
 
-  return req.session.save(() => {
-    return res.redirect(`/member/${req.params.id}`);
-  });
-}
+      return req.session.save(() => {
+        return res.redirect(`/member/${req.params.id}`);
+      });
+    }
 
-if (superUser !== member.super_user) {
-  change = true;
-}
+    if (superUser !== member.super_user) {
+      change = true;
+    }
 
-if (onCoop === 'true') {
-  onCoop = true;
-} else if (onCoop === 'false') {
-  onCoop = false;
-} else {
-  // wasn't true or false, set to current value
-  onCoop = member.on_coop;
-}
+    if (superSuperUser === 'true') {
+      superSuperUser = true;
+    } else if (superSuperUser === 'false') {
+      superSuperUser = false;
+    } else {
+      // wasn't true or false, set to current value
+      superSuperUser = member.super_super_user;
+    }
 
-if (change === false && onCoop !== member.on_coop) {
-  change = true;
-}
+    // Only super-super users may change super-super-user status
+    if (
+      superSuperUser !== member.super_super_user
+      && req.user.super_super_user !== true
+    ) {
+      req.session.status = 403;
+      req.session.alert.errorMessages.push(
+        'Only authorized administrators can change super-super user status.',
+      );
+
+      return req.session.save(() => {
+        return res.redirect(`/member/${req.params.id}`);
+      });
+    }
+
+    // A super-super user must also be a super user
+    if (superSuperUser === true) {
+      superUser = true;
+    }
+
+    // Removing super-user status also removes super-super-user status
+    if (superUser === false) {
+      superSuperUser = false;
+    }
+
+    if (superSuperUser !== member.super_super_user) {
+      change = true;
+    }
+
+    if (onCoop === 'true') {
+      onCoop = true;
+    } else if (onCoop === 'false') {
+      onCoop = false;
+    } else {
+      // wasn't true or false, set to current value
+      onCoop = member.on_coop;
+    }
+
+    if (change === false && onCoop !== member.on_coop) {
+      change = true;
+    }
 
     if (privateUser === 'true') {
       privateUser = true;
     } else if (privateUser === 'false') {
       privateUser = false;
     } else {
-      // wasn't tyure or false, set to current value
+      // wasn't true or false, set to current value
       privateUser = member.private_user;
     }
+
     if (change === false && privateUser !== member.private_user) {
       change = true;
     }
+
     if (isCertified === 'true') {
       isCertified = true;
     } else if (isCertified === 'false') {
@@ -647,11 +691,14 @@ if (change === false && onCoop !== member.on_coop) {
       // wasn't true or false, set to current value
       isCertified = member.is_certified;
     }
+
     if (change === false && isCertified !== member.is_certified) {
       change = true;
     }
+
     return member.update({
       super_user: superUser,
+      super_super_user: superSuperUser,
       on_coop: onCoop,
       private_user: privateUser,
       is_certified: isCertified,
@@ -663,6 +710,7 @@ if (change === false && onCoop !== member.on_coop) {
         req.session.status = 304;
         req.session.alert.infoMessages.push('No changes applied.');
       }
+
       return req.session.save(() => {
         return res.redirect(`/member/${req.params.id}`);
       });

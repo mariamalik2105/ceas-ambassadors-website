@@ -51,11 +51,11 @@ block content
             p #{meetings} Meetings Attended
             p #{serviceNotNeeded} Points Not Needed
         if member.is_certified
-          div.secondary-info-detail 
+          div.secondary-info-detail
             h3 Certified?
             p Yes
         if !member.is_certified
-          div.secondary-info-detail 
+          div.secondary-info-detail
             h3 Certified?
             p No
   //- show event attendance information only for themselves and super users
@@ -78,17 +78,27 @@ block content
       h2 Meta Attributes
 
       if user.super_super_user
-        if member.super_user
-          //- deescalate super user
+        //- Regular member -> Super User
+        if !member.super_user
+          form(id='superUserElevate', action='/member/' + member.id + '/update-attributes?super_user=true', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input.submit-small(type='submit', name='elevate', value='Elevate to Super User')
+
+        //- Super User -> Super-Super User OR Regular Member
+        if member.super_user && !member.super_super_user
+          form(id='superSuperUserElevate', action='/member/' + member.id + '/update-attributes?super_super_user=true', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input.submit-small(type='submit', name='elevate', value='Elevate to Super-Super User')
+
           form(id='superUserDemote', action='/member/' + member.id + '/update-attributes?super_user=false', method='post')
             input(type='hidden', name='_csrf', value=csrfToken)
             input.submit-small(type='submit', name='demote', value='Demote Super User')
 
-        if !member.super_user
-          //- escalate to super user
-          form(id='superUserElevate', action='/member/' + member.id + '/update-attributes?super_user=true', method='post')
+        //- Super-Super User -> Super User
+        if member.super_super_user
+          form(id='superSuperUserDemote', action='/member/' + member.id + '/update-attributes?super_super_user=false', method='post')
             input(type='hidden', name='_csrf', value=csrfToken)
-            input.submit-small(type='submit', name='elevate', value='Elevate to Super User')
+            input.submit-small(type='submit', name='demote', value='Demote Super-Super User')
 
       if member.on_coop
         //- Change to in Class
