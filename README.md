@@ -11,6 +11,8 @@ I contributed to the development and production maintenance of the University of
   - Promote Super Users to Super-Super Users.
   - Demote Super-Super Users to Super Users.
   - Demote Super Users to regular members.
+- Automated members' **Current Rotation** status so it updates between **In Class** and **On Co-op** as semesters change, while accounting for graduation year and allowing manual overrides for students following different sequences.
+- Added testing to ensure semester changes, freshman schedules, and manual overrides behave correctly without changing a member's status multiple times in the same semester.
 - Updated the member management interface using **Pug**.
 - Added and updated automated tests for administrator permissions and role-management behavior.
 - Worked with **Node.js, Express, Sequelize, MySQL, Pug, Git, and Dokku**.
