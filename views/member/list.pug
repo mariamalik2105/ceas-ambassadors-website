@@ -4,6 +4,20 @@ include ./mixins/list.pug
 include mixins/points-table
 
 block content
+  div.member-search-container
+    input(
+      id='memberSearch'
+      class='member-search'
+      type='text'
+      placeholder='Search by name or major...'
+      autocomplete='off'
+    )
+
+  p#noMembersFound.no-members-found No members found.
+
   +member-list(members, "Members")
+
   if(user && user.super_user)
     +member-table(members, "Points")
+
+  script(src='/javascripts/member-search.js')

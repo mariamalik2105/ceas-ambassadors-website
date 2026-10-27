@@ -374,6 +374,36 @@ nav{
 }
 
 /*************************
+* Member Search Styling
+*************************/
+.member-search-container{
+  width: 100%;
+  margin: 20px 0;
+}
+
+.member-search{
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 500px;
+  padding: 12px 15px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #4b4b4b;
+}
+
+.member-search:focus{
+  outline: none;
+  border-color: #b31227;
+}
+
+.no-members-found{
+  display: none;
+  color: #4b4b4b;
+  font-style: italic;
+}
+
+/*************************
 * Member Card Styling
 *************************/
 .member-table{
