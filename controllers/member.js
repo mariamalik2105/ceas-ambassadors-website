@@ -6,7 +6,31 @@ const passport = require('passport');
 const multer = require('multer');
 const fs = require('fs');
 const models = require('../models');
+const {
+  getCurrentRotationTerm,
+  getUpdatedRotation,
+} = require('../utils/rotation');
+const syncMemberRotation = (member) => {
+  const updatedRotation = getUpdatedRotation(member);
 
+  if (
+    member.on_coop === updatedRotation.onCoop
+    && member.rotation_term === updatedRotation.rotationTerm
+  ) {
+    return Promise.resolve(member);
+  }
+
+  return member.update({
+    on_coop: updatedRotation.onCoop,
+    rotation_term: updatedRotation.rotationTerm,
+  });
+};
+
+const syncMemberRotations = (members) => {
+  return Promise.all(members.map((member) => {
+    return syncMemberRotation(member);
+  }));
+};
 const pictureUpload = multer({
   dest: 'public/images/profile/',
   limits: {
@@ -316,7 +340,7 @@ exports.postChangePassword = postChangePassword;
  * @param {*} req - incoming request
  * @param {*} res - outgoing response
  */
-const getSettings = (req, res) => {
+const getSettings = (req, res, next) => {
   // Ensure there is a user signed in
   if (!req.user) {
     req.session.status = 401;
@@ -325,12 +349,15 @@ const getSettings = (req, res) => {
       return res.redirect('/');
     });
   }
-  return res.status(res.locals.status).render('member/settings', {
-    title: 'Settings',
-  });
+
+  // Ensure the member's rotation is current before showing settings
+  return syncMemberRotation(req.user).then(() => {
+    return res.status(res.locals.status).render('member/settings', {
+      title: 'Settings',
+    });
+  }).catch(next);
 };
 exports.getSettings = getSettings;
-
 /**
  *
  * @param {*} req - incoming requeest
@@ -385,6 +412,13 @@ const postProfileUpdate = (req, res, next) => {
       onCoop = true;
     }
 
+    // If the member manually changes their rotation, make the
+    // current semester the new baseline for future automation.
+    let rotationTerm = req.user.rotation_term;
+    if (onCoop !== req.user.on_coop) {
+      rotationTerm = getCurrentRotationTerm();
+    }
+
     // Ensure that gradYear is a number
     // correct syntax for let gradYear = req.body.gradYear;
     let { gradYear } = req.body;
@@ -403,6 +437,7 @@ const postProfileUpdate = (req, res, next) => {
       hometown: req.body.hometown,
       coops: req.body.coops,
       on_coop: onCoop,
+      rotation_term: rotationTerm,
       path_to_picture: file,
     }).then(() => {
       req.session.status = 200;
@@ -436,7 +471,13 @@ const getProfile = (req, res, next) => {
     type: models.sequelize.QueryTypes.SELECT,
   });
 
-  const memberPromise = models.Member.findByPk(req.params.id);
+    const memberPromise = models.Member.findByPk(req.params.id).then((member) => {
+    if (!member) {
+      return null;
+    }
+
+    return syncMemberRotation(member);
+  });
 
   return Promise.all([memberPromise, eventPromise]).then(([member, events]) => {
     if (!member) {
@@ -539,6 +580,8 @@ const getList = (req, res, next) => {
       ['last_name', 'ASC'],
       ['first_name', 'ASC'],
     ],
+  }).then((members) => {
+    return syncMemberRotations(members);
   }).then((members) => {
     return res.status(res.locals.status).render('member/list', {
       title: 'Members',
@@ -657,6 +700,8 @@ const postUpdateAttributes = (req, res, next) => {
       change = true;
     }
 
+    let rotationTerm = member.rotation_term;
+
     if (onCoop === 'true') {
       onCoop = true;
     } else if (onCoop === 'false') {
@@ -666,8 +711,14 @@ const postUpdateAttributes = (req, res, next) => {
       onCoop = member.on_coop;
     }
 
-    if (change === false && onCoop !== member.on_coop) {
-      change = true;
+    // A manual rotation change becomes the new baseline
+    // for automatic semester rotation.
+    if (onCoop !== member.on_coop) {
+      rotationTerm = getCurrentRotationTerm();
+
+      if (change === false) {
+        change = true;
+      }
     }
 
     if (privateUser === 'true') {
@@ -700,6 +751,7 @@ const postUpdateAttributes = (req, res, next) => {
       super_user: superUser,
       super_super_user: superSuperUser,
       on_coop: onCoop,
+      rotation_term: rotationTerm,
       private_user: privateUser,
       is_certified: isCertified,
     }).then(() => {
@@ -798,7 +850,13 @@ const postResetPassword = (req, res, next) => {
   // randomly generate password
   const password = Math.random().toString(36).substr(2, 8);
   // Find the member
-  const memberPromise = models.Member.findByPk(req.params.id);
+  const memberPromise = models.Member.findByPk(req.params.id).then((member) => {
+  if (!member) {
+    return null;
+  }
+
+  return syncMemberRotation(member);
+});
 
   const passwordPromise = models.Member.generatePasswordHash(password);
 
