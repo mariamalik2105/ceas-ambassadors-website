@@ -1,6 +1,37 @@
 mixin member-table(members, title)
     h1.points-table=title
-    table.table
+
+    div.points-filter-container
+        div.points-filter-group
+            label(for='minPoints') Minimum Points
+            input#minPoints.points-filter-input(
+                type='number'
+                min='0'
+                step='0.5'
+                placeholder='e.g. 10'
+            )
+
+        div.points-filter-group
+            label(for='maxPoints') Maximum Points
+            input#maxPoints.points-filter-input(
+                type='number'
+                min='0'
+                step='0.5'
+                placeholder='e.g. 20'
+            )
+
+        div.points-filter-group
+            label(for='pointsSort') Sort Points
+            select#pointsSort.points-filter-select
+                option(value='default') Default
+                option(value='high-low') Highest to Lowest
+                option(value='low-high') Lowest to Highest
+
+        button#clearPointsFilters.points-filter-clear(type='button') Clear Filters
+
+    p#noPointsResults.no-points-results No members match these filters.
+
+    table.table#pointsTable
         thead
             tr
                 th Name
@@ -13,17 +44,18 @@ mixin member-table(members, title)
                 th Not Needed
                 th Excused
                 th No Show
-                
-        each member in members
-            tr
-                td #{member.first_name} #{member.last_name}
-                td #{member.email}
-                td #{member.major}
-                td #{member.on_coop ? "Co-op" : "Class"}
-                td #{member.is_certified ? "Yes" : "No"}
-                td #{member.meetings}
-                td #{member.service / 3600000}
-                td #{member.service_not_needed / 3600000}
-                td #{member.service_excused/ 3600000}
-                td #{member.service_no_show / 3600000}
 
+        tbody
+            each member in members
+                - var memberPoints = member.service / 3600000
+                tr.points-member-row(data-points=memberPoints)
+                    td #{member.first_name} #{member.last_name}
+                    td #{member.email}
+                    td #{member.major}
+                    td #{member.on_coop ? "Co-op" : "Class"}
+                    td #{member.is_certified ? "Yes" : "No"}
+                    td #{member.meetings}
+                    td #{memberPoints}
+                    td #{member.service_not_needed / 3600000}
+                    td #{member.service_excused / 3600000}
+                    td #{member.service_no_show / 3600000}
