@@ -4,18 +4,15 @@ I contributed to the development and production maintenance of the University of
 
 ### Work Completed
 
-- Implemented a hierarchical **Super User / Super-Super User authorization system** for member administration.
-- Developed functionality allowing Super-Super Users to:
-  - Promote members to Super Users.
-  - Promote Super Users to Super-Super Users.
-  - Demote Super-Super Users to Super Users.
-  - Demote Super Users to regular members.
-- Added secure backend authorization checks to prevent unauthorized role promotion and demotion.
-- Automated members' **Current Rotation** status so it updates between **In Class** and **On Co-op** as semesters change, while accounting for graduation year and allowing manual overrides for students following different sequences.
-- Added an interactive **member search feature** that lets users quickly filter the Members page by **first name, last name, full name, or major** with real-time, case-insensitive results.
-- Updated the member management interface using **Pug**.
-- Added embedded ambassador resources and presentations to the **Info Booklet** section of the website.
-- Added and updated automated tests for administrator permissions, role-management behavior, semester changes, freshman schedules, and manual rotation overrides.
+- Implemented a hierarchical **Super User / Super-Super User authorization system** using role-based permission checks for member administration.
+- Added **role promotion and demotion workflows** allowing authorized users to manage Super User and Super-Super User access.
+- Added secure **backend authorization checks** to prevent unauthorized role changes.
+- Automated members’ **Current Rotation** using semester-based logic that switches between **In Class** and **On Co-op** while supporting manual overrides.
+- Added **member search** using client-side JavaScript to filter members by name and major in real time.
+- Added **Points filtering and sorting** using client-side JavaScript to filter by point ranges and dynamically reorder results.
+- Updated the **member management interface** using Pug templates and reusable components.
+- Added embedded **Info Booklet resources and presentations** using in-page document previews.
+- Added and updated **automated tests** to validate permissions, role management, semester rotation logic, and manual overrides.
 - Worked with **Node.js, Express, Sequelize, MySQL, Pug, Git, and Dokku**.
 - Tested changes locally before deploying updates to the production server.
 - Deployed production updates to **[ucceasambassadors.com](https://ucceasambassadors.com/)**.
