@@ -1,6 +1,7 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
+  const exportButton = document.getElementById('exportPointsCsv');
   const minPointsInput = document.getElementById('minPoints');
   const maxPointsInput = document.getElementById('maxPoints');
   const pointsSort = document.getElementById('pointsSort');
@@ -61,9 +62,84 @@ document.addEventListener('DOMContentLoaded', () => {
       : 'none';
   };
 
+  const exportVisibleRowsToCsv = () => {
+    const visibleRows = Array.from(
+      tbody.querySelectorAll('.points-member-row')
+    ).filter((row) => {
+      return row.style.display !== 'none';
+    });
+
+    if (visibleRows.length === 0) {
+      return;
+    }
+
+    const headers = [
+      'Name',
+      'Email',
+      'Major',
+      'Status',
+      'Certified',
+      'Meetings',
+      'Points',
+      'Not Needed',
+      'Excused',
+      'No Show',
+    ];
+
+    const csvRows = [headers];
+
+    visibleRows.forEach((row) => {
+      const cells = Array.from(row.querySelectorAll('td')).map((cell) => {
+        return cell.textContent.trim();
+      });
+
+      csvRows.push(cells);
+    });
+
+    const csvContent = csvRows.map((row) => {
+      return row.map((value) => {
+        const escapedValue = value.replace(/"/g, '""');
+        return `"${escapedValue}"`;
+      }).join(',');
+    }).join('\n');
+
+    const blob = new Blob(
+      [`\uFEFF${csvContent}`],
+      { type: 'text/csv;charset=utf-8;' }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    const today = new Date();
+    const month = today.getMonth();
+    const year = today.getFullYear();
+
+    let semester = 'Spring';
+
+    if (month >= 4 && month <= 6) {
+      semester = 'Summer';
+    } else if (month >= 7) {
+      semester = 'Fall';
+    }
+
+    link.href = url;
+    link.download = `CEAS-Ambassadors-Points-${semester}-${year}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
   minPointsInput.addEventListener('input', applyFilters);
   maxPointsInput.addEventListener('input', applyFilters);
   pointsSort.addEventListener('change', applyFilters);
+
+  if (exportButton) {
+    exportButton.addEventListener('click', exportVisibleRowsToCsv);
+  }
 
   clearButton.addEventListener('click', () => {
     minPointsInput.value = '';
